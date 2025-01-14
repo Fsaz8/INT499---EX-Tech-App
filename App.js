@@ -1,66 +1,88 @@
-import React, { useState } from 'react';
-import './App.css';
-import { FaPlus, FaTrash } from 'react-icons/fa'; // Adding user-friendly icons
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
+import axios from 'axios';
+
+const API_KEY = 'c9c280c50074a485364f3fcbabdc6c81'; 
+const API_URL = 'https://api.themoviedb.org/3';
 
 function App() {
-    const [events, setEvents] = useState([]);
-    const [inputValue, setInputValue] = useState('');
+  return (
+    <Router>
+      <nav>
+        <Link to="/">Home</Link> | <Link to="/search">Search Movies</Link>
+      </nav>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/search" element={<SearchMovies />} />
+      </Routes>
+    </Router>
+  );
+}
 
-    const handleAddEvent = () => {
-        if (inputValue.trim() !== '') {
-            setEvents([...events, inputValue]);
-            setInputValue(''); // Clear input after adding event
-        }
-    };
+function Home() {
+  return (
+    <div>
+      <h1>Welcome to the Movie App</h1>
+      <p>Use the navigation to search for movies!</p>
+    </div>
+  );
+}
 
-    const handleDeleteEvent = (index) => {
-        const updatedEvents = events.filter((_, i) => i !== index);
-        setEvents(updatedEvents);
-    };
+function SearchMovies() {
+  const [query, setQuery] = useState('');
+  const [movies, setMovies] = useState([]);
 
-    return (
-        <div className="App">
-            <header className="App-header">
-                <h1>StreamList</h1>
-                <p>Track and manage your events effortlessly!</p>
-            </header>
+  useEffect(() => {
+    const savedMovies = localStorage.getItem('movies');
+    if (savedMovies) {
+      setMovies(JSON.parse(savedMovies));
+    }
+  }, []);
 
-            <main>
-                <div className="event-input">
-                    <input
-                        type="text"
-                        placeholder="Enter a new event..."
-                        value={inputValue}
-                        onChange={(e) => setInputValue(e.target.value)}
-                    />
-                    <button onClick={handleAddEvent}>
-                        <FaPlus /> Add Event
-                    </button>
-                </div>
+  useEffect(() => {
+    localStorage.setItem('movies', JSON.stringify(movies));
+  }, [movies]);
 
-                <ul className="event-list">
-                    {events.map((event, index) => (
-                        <li key={index} className="event-item">
-                            {event}
-                            <button onClick={() => handleDeleteEvent(index)} className="delete-button">
-                                <FaTrash />
-                            </button>
-                        </li>
-                    ))}
-                </ul>
-            </main>
+  const searchMovies = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/search/movie`, {
+        params: {
+          api_key: API_KEY,
+          query,
+        },
+      });
+      setMovies(response.data.results);
+    } catch (error) {
+      console.error('Error fetching movies:', error);
+    }
+  };
 
-            <footer>
-                <nav className="footer-nav">
-                    <ul>
-                        <li><a href="#home">Home</a></li>
-                        <li><a href="#about">About</a></li>
-                        <li><a href="#contact">Contact</a></li>
-                    </ul>
-                </nav>
-            </footer>
-        </div>
-    );
+  return (
+    <div>
+      <h1>Search Movies</h1>
+      <input
+        type="text"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Enter movie name"
+      />
+      <button onClick={searchMovies}>Search</button>
+      <div>
+        {movies.map((movie) => (
+          <div key={movie.id}>
+            <h3>{movie.title}</h3>
+            <p>{movie.overview}</p>
+            {movie.poster_path && (
+              <img
+                src={`https://image.tmdb.org/t/p/w200/${movie.poster_path}`}
+                alt={movie.title}
+              />
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export default App;
