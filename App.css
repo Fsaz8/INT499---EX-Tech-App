@@ -1,3 +1,4 @@
+/* Existing styles */
 body {
   font-family: Arial, sans-serif;
   margin: 0;
@@ -47,4 +48,22 @@ button {
 
 button:hover {
   background-color: #0056b3;
+}
+
+/* New styles for the event list */
+.event-list {
+  list-style-type: none;
+  padding: 0;
+}
+
+.event-list li {
+  margin: 10px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.event-list .completed {
+  text-decoration: line-through;
+  color: gray;
 }
